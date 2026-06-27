@@ -53,8 +53,8 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file") 
 digraph skill_flow {
     "User message received" [shape=doublecircle];
     "About to enter plan mode?" [shape=doublecircle];
-    "Already ran lean-spec?" [shape=diamond];
-    "Invoke lean-spec skill" [shape=box];
+    "Already ran rapid-spec?" [shape=diamond];
+    "Invoke rapid-spec skill" [shape=box];
     "Might any skill apply?" [shape=diamond];
     "Invoke the skill" [shape=box];
     "Announce: 'Using [skill] to [purpose]'" [shape=box];
@@ -63,10 +63,10 @@ digraph skill_flow {
     "Follow skill exactly" [shape=box];
     "Respond (including clarifications)" [shape=doublecircle];
 
-    "About to enter plan mode?" -> "Already ran lean-spec?";
-    "Already ran lean-spec?" -> "Invoke lean-spec skill" [label="no"];
-    "Already ran lean-spec?" -> "Might any skill apply?" [label="yes"];
-    "Invoke lean-spec skill" -> "Might any skill apply?";
+    "About to enter plan mode?" -> "Already ran rapid-spec?";
+    "Already ran rapid-spec?" -> "Invoke rapid-spec skill" [label="no"];
+    "Already ran rapid-spec?" -> "Might any skill apply?" [label="yes"];
+    "Invoke rapid-spec skill" -> "Might any skill apply?";
 
     "User message received" -> "Might any skill apply?";
     "Might any skill apply?" -> "Invoke the skill" [label="yes, even 1%"];
@@ -102,10 +102,10 @@ These thoughts mean STOP—you're rationalizing:
 
 When multiple skills could apply, use this order:
 
-1. **Process skills first** (lean-spec, systematic-debugging) - these determine HOW to approach the task
+1. **Process skills first** (rapid-spec, systematic-debugging) - these determine HOW to approach the task
 2. **Implementation skills second** (plan-as-folder, rapid-execute) - these guide execution
 
-"Let's build X" → lean-spec first, then plan-as-folder, then rapid-execute.
+"Let's build X" → rapid-spec first, then plan-as-folder, then rapid-execute.
 "Fix this bug" → systematic-debugging first, then domain-specific skills.
 
 ## Skill Types

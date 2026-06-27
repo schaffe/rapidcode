@@ -9,7 +9,7 @@ The moment you describe what you want to build, rapidcode kicks in. It asks only
 ## The Workflow
 
 ```
-/rapidcode:lean-spec        # ≤3 questions → spec → manual-edit gate
+/rapidcode:rapid-spec       # ≤3 questions → spec → manual-edit gate
         ↓
 /rapidcode:plan-as-folder   # spec → DAG of step files under .rapid/plans/
         ↓                     (manual-edit gate before execution)
@@ -34,8 +34,8 @@ Whole-branch review (working-tree diff vs merge base) → fix → re-review unti
 ### Core workflow
 | Skill | When to use |
 |---|---|
-| `lean-spec` | Starting any new build |
-| `plan-as-folder` | After lean-spec — auto-invoked |
+| `rapid-spec` | Starting any new build |
+| `plan-as-folder` | After rapid-spec — auto-invoked |
 | `rapid-execute` | After plan-as-folder confirms — auto-invoked |
 
 ### Recovery & iteration
@@ -79,7 +79,7 @@ All runtime artifacts are gitignored under `.rapid/`:
 
 ```
 .rapid/
-  specs/<date>-<topic>.md       # lean-spec output — edit before planning
+  specs/<date>-<topic>.md       # rapid-spec output — edit before planning
   plans/<feature>/
     00-overview.md              # DAG table, goal, constraints
     task-NN-<kind>-<name>.md    # self-contained step files
@@ -130,7 +130,7 @@ Example: `functionName("x") → "y"`
 If `rapid-execute` is interrupted:
 
 ```bash
-/rapidcode:resume .rapid/plans/<feature>/
+/rapidcode:resume-task .rapid/plans/<feature>/
 ```
 
 Reads `.rapid/ledger.md`, skips completed nodes, resumes from the first incomplete wave.

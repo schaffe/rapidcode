@@ -1,17 +1,17 @@
 ---
-name: resume
+name: resume-task
 description: Use after a rapid-execute was aborted or interrupted — resumes from the last completed node
 ---
 
-# Resume
+# Resume Task
 
 Resume a `rapid-execute` run that was aborted, interrupted, or hit a BLOCKED node.
 
-**Announce at start:** "I'm using resume to continue the interrupted run."
+**Announce at start:** "I'm using resume-task to continue the interrupted run."
 
 ## Arguments
 
-`/rapidcode:resume <plan-dir>` — path to the plan folder, e.g. `.rapid/plans/my-feature/`
+`/rapidcode:resume-task <plan-dir>` — path to the plan folder, e.g. `.rapid/plans/my-feature/`
 
 ## Process
 

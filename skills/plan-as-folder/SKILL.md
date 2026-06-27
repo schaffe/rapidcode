@@ -1,6 +1,6 @@
 ---
 name: plan-as-folder
-description: Use after lean-spec to decompose a spec into a DAG of step files under .rapid/plans/
+description: Use after rapid-spec to decompose a spec into a DAG of step files under .rapid/plans/
 ---
 
 # Plan as Folder
