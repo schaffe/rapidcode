@@ -100,11 +100,16 @@ loop:
   5. Continue loop.
 ```
 
-On loop exit, notify:
-> "Phase 2 complete — zero Critical/Important findings. The prototype is review-clean. Nothing has been committed. Commit whenever you're satisfied."
+On loop exit, stage the work (do not commit):
+> Run: `git add -A`
+
+Staging makes the full change set easy to review and commit, without committing it for the user.
+
+Then notify:
+> "Phase 2 complete — zero Critical/Important findings. The prototype is review-clean. Changes are staged but not committed. Commit whenever you're satisfied."
 
 ## Rules
-- **Never commit** in Phase 1 or Phase 2.
+- **Never commit** in Phase 1 or Phase 2. Staging (`git add -A`) at the end of Phase 2 is fine; committing is the user's call.
 - **Never pause between nodes** to check in — execute until done or BLOCKED.
 - **Always read files from disk** — never paste step file contents into dispatch prompts.
 - **opencode toggle**: if the user invoked `rapidcode:opencode-executor` this session, all dispatch routes through opencode. Claude is the fallback on BLOCKED.
