@@ -1,280 +1,156 @@
-# Superpowers
+# rapidcode
 
-Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
-
-## Quickstart
-
-Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi).
+A speed-first development methodology for coding agents. Get a running, tested prototype in under 15 minutes, then harden it to reviewer-clean in the background.
 
 ## How it works
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
+The moment you describe what you want to build, rapidcode kicks in. It asks only the questions that change the build (at most three), writes a lean spec, and pauses so you can edit it by hand. Once you confirm, it decomposes the spec into a parallel DAG of self-contained step files and executes them — code and tests authored independently from the same contracts, in parallel waves. Phase 1 ends when every test is green and the prototype runs. You start playing with it immediately while Phase 2 hardens it autonomously via a review loop.
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
+## The Workflow
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
-
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for your agent to work autonomously for a couple hours at a time without deviating from the plan you put together.
-
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
-
-## Commercial Services
-
-If you're using Superpowers in enterprise and could benefit from commercial support, additional tooling, or managed spending, please don't hesitate to drop us a line at sales@primeradiant.com.
-
-## Installation
-
-Installation differs by harness. If you use more than one, install Superpowers separately for each one.
-
-### Claude Code
-
-Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
-
-#### Official Marketplace
-
-- Install the plugin from Anthropic's official marketplace:
-
-  ```bash
-  /plugin install superpowers@claude-plugins-official
-  ```
-
-#### Superpowers Marketplace
-
-The Superpowers marketplace provides Superpowers and some other related plugins for Claude Code.
-
-- Register the marketplace:
-
-  ```bash
-  /plugin marketplace add obra/superpowers-marketplace
-  ```
-
-- Install the plugin from this marketplace:
-
-  ```bash
-  /plugin install superpowers@superpowers-marketplace
-  ```
-
-### Antigravity
-
-Install Superpowers as a plugin from this repository:
-
-```bash
-agy plugin install https://github.com/obra/superpowers
+```
+/rapidcode:lean-spec        # ≤3 questions → spec → manual-edit gate
+        ↓
+/rapidcode:plan-as-folder   # spec → DAG of step files under .rapid/plans/
+        ↓                     (manual-edit gate before execution)
+/rapidcode:rapid-execute    # parallel wave-scheduler → Phase 1 done → Phase 2 review loop
 ```
 
-Antigravity runs the plugin's session-start hook, so Superpowers is active from
-the first message. Reinstall with the same command to update.
+### Phase 1 — Time-critical (≤15 min)
 
-### Codex App
+Each step file declares a node kind, a model, and a contract. The wave-scheduler dispatches all independent nodes in parallel:
 
-Superpowers is available via the [official Codex plugin marketplace](https://github.com/openai/plugins).
+- **Wave 1 (all in parallel):** every `code` node (implements a unit) + every `author-test` node (writes tests from the contract, never reads the implementation)
+- **Subsequent waves:** `run-test` gates fire as their deps land — unit tests, then integration tests, then the smoke test (DAG sink)
 
-- In the Codex app, click on Plugins in the sidebar.
-- You should see `Superpowers` in the Coding section.
-- Click the `+` next to Superpowers and follow the prompts.
+When every `run-test` node is green → prototype is running, nothing committed.
 
-### Codex CLI
+### Phase 2 — Background (not time-critical)
 
-Superpowers is available via the [official Codex plugin marketplace](https://github.com/openai/plugins).
+Whole-branch review (working-tree diff vs merge base) → fix → re-review until zero Critical/Important findings → notify. Runs autonomously while you play with the prototype.
 
-- Open the plugin search interface:
+## Skills
 
-  ```bash
-  /plugins
-  ```
+### Core workflow
+| Skill | When to use |
+|---|---|
+| `lean-spec` | Starting any new build |
+| `plan-as-folder` | After lean-spec — auto-invoked |
+| `rapid-execute` | After plan-as-folder confirms — auto-invoked |
 
-- Search for Superpowers:
+### Recovery & iteration
+| Skill | When to use |
+|---|---|
+| `resume` | After a rapid-execute was aborted or interrupted |
+| `rerun-step` | Re-run one specific step file in isolation |
+| `opencode-executor` | Toggle free-model execution via opencode CLI for the session |
 
-  ```bash
-  superpowers
-  ```
+### Engineering disciplines
+| Skill | When to use |
+|---|---|
+| `test-driven-development` | Implementing any feature or bugfix |
+| `systematic-debugging` | Any bug, test failure, or unexpected behavior |
+| `verification-before-completion` | Before claiming work is complete |
+| `requesting-code-review` | Completing features, before merging |
+| `receiving-code-review` | Responding to review feedback |
+| `dispatching-parallel-agents` | 2+ independent tasks without shared state |
+| `using-git-worktrees` | Feature work that needs isolation |
+| `finishing-a-development-branch` | Implementation complete, time to integrate |
+| `writing-skills` | Creating or editing skills |
 
-- Select `Install Plugin`.
+## Installation (Claude Code)
 
-### Cursor
-
-- In Cursor Agent chat, install from marketplace:
-
-  ```text
-  /add-plugin superpowers
-  ```
-
-- Or search for "superpowers" in the plugin marketplace.
-
-### Factory Droid
-
-- Register the marketplace:
-
-  ```bash
-  droid plugin marketplace add https://github.com/obra/superpowers
-  ```
-
-- Install the plugin:
-
-  ```bash
-  droid plugin install superpowers@superpowers
-  ```
-
-### Gemini CLI
-
-- Install the extension:
-
-  ```bash
-  gemini extensions install https://github.com/obra/superpowers
-  ```
-
-- Update later:
-
-  ```bash
-  gemini extensions update superpowers
-  ```
-
-### GitHub Copilot CLI
-
-- Register the marketplace:
-
-  ```bash
-  copilot plugin marketplace add obra/superpowers-marketplace
-  ```
-
-- Install the plugin:
-
-  ```bash
-  copilot plugin install superpowers@superpowers-marketplace
-  ```
-
-### Kimi Code
-
-Superpowers is available in Kimi Code's plugin marketplace.
-
-- Open Kimi Code's plugin manager:
-
-  ```text
-  /plugins
-  ```
-
-- Go to `Marketplace` > `Superpowers` and install it.
-
-- Or install directly from this repository:
-
-  ```text
-  /plugins install https://github.com/obra/superpowers
-  ```
-
-- Detailed docs: [docs/README.kimi.md](docs/README.kimi.md)
-
-### OpenCode
-
-OpenCode uses its own plugin install; install Superpowers separately even if you
-already use it in another harness.
-
-- Tell OpenCode:
-
-  ```
-  Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
-  ```
-
-- Detailed docs: [docs/README.opencode.md](docs/README.opencode.md)
-
-### Pi
-
-Install Superpowers as a Pi package from this repository:
+This is a local plugin. From this repo:
 
 ```bash
-pi install git:github.com/obra/superpowers
+/plugin install rapidcode
+/reload-plugins
 ```
 
-For local development, run Pi with this checkout loaded as a temporary package:
+Or install directly from the directory:
 
 ```bash
-pi -e /path/to/superpowers
+/plugin install /path/to/rapidcode
 ```
 
-The Pi package loads the Superpowers skills and a small extension that injects the `using-superpowers` bootstrap at session startup and again after compaction. Pi has native skills, so no compatibility `Skill` tool is required. Subagent and task-list tools remain optional Pi companion packages.
+## Artifact layout
 
-## The Basic Workflow
+All runtime artifacts are gitignored under `.rapid/`:
 
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
+```
+.rapid/
+  specs/<date>-<topic>.md       # lean-spec output — edit before planning
+  plans/<feature>/
+    00-overview.md              # DAG table, goal, constraints
+    task-NN-<kind>-<name>.md    # self-contained step files
+  ledger.md                     # per-step completion record (resume anchor)
+  run/                          # subagent reports, diffs, review packages
+```
 
-2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
+Nothing is committed by the workflow. You commit when satisfied.
 
-3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
+## Step file format
 
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
+Each step file declares its node kind, dependencies, model, and contract:
 
-5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
+```markdown
+# Task NN: <name>
 
-6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
+**Kind:** code | author-test | run-test
+**Test-scope:** unit | integration | smoke   (omit for code nodes)
+**Depends-on:** []                           ([] = Wave-1 root)
+**Executor:** claude
+**Model:** claude-haiku-4-5-20251001
 
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+**Files:**
+- Create: `src/exact/path.ts`
 
-**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
+## Contract
+`functionName(input: Type): ReturnType`
+Example: `functionName("x") → "y"`
 
-## What's Inside
+## Implementation notes   (code nodes only)
+## Test instructions      (author-test nodes only)
+```
 
-### Skills Library
+- `code` and `author-test` nodes have empty `Depends-on` — they run in Wave 1 in parallel
+- `run-test` nodes depend on their `code` + `author-test` nodes
+- Integration and smoke `run-test` nodes are the DAG's later waves and sink
 
-**Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
+## Design principles
 
-**Debugging**
-- **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
-- **verification-before-completion** - Ensure it's actually fixed
+- **Rigor lives in the plan.** Contracts + independent test authorship replace per-task reviewer subagents.
+- **Tests are the gate.** Code and tests are written from the same contract by separate subagents. Tests verify the contract, not the implementation's bugs.
+- **No eager commits.** Phase 1 builds in the working tree. You decide when to commit.
+- **Cheap models, explicitly.** Every step file declares its model. Default: haiku. Escalate only where the plan says so.
+- **Minimal reports.** Subagents write detail to `.rapid/run/` and return status only.
 
-**Collaboration** 
-- **brainstorming** - Socratic design refinement
-- **writing-plans** - Detailed implementation plans
-- **executing-plans** - Batch execution with checkpoints
-- **dispatching-parallel-agents** - Concurrent subagent workflows
-- **requesting-code-review** - Pre-review checklist
-- **receiving-code-review** - Responding to feedback
-- **using-git-worktrees** - Parallel development branches
-- **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
+## Recovery
 
-**Meta**
-- **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **using-superpowers** - Introduction to the skills system
+If `rapid-execute` is interrupted:
 
-## Philosophy
+```bash
+/rapidcode:resume .rapid/plans/<feature>/
+```
 
-- **Test-Driven Development** - Write tests first, always
-- **Systematic over ad-hoc** - Process over guessing
-- **Complexity reduction** - Simplicity as primary goal
-- **Evidence over claims** - Verify before declaring success
+Reads `.rapid/ledger.md`, skips completed nodes, resumes from the first incomplete wave.
 
-Read [the original release announcement](https://blog.fsck.com/2025/10/09/superpowers/).
+To re-run a single node:
 
-## Contributing
+```bash
+/rapidcode:rerun-step .rapid/plans/<feature>/task-NN-<name>.md
+```
 
-The general contribution process for Superpowers is below. Keep in mind that we don't generally accept contributions of new skills and that any updates to skills must work across all of the coding agents we support.
+## Free models via opencode
 
-1. Fork the repository
-2. Switch to the 'dev' branch
-3. Create a branch for your work
-4. Follow the `writing-skills` skill for creating and testing new and modified skills
-5. Submit a PR, being sure to fill in the pull request template.
+Say "use free models" or "use opencode" before running `rapid-execute` — or invoke the skill directly:
 
-Skill-behavior tests use the drill eval harness from [superpowers-evals](https://github.com/prime-radiant-inc/superpowers-evals/), cloned into `evals/` — see `evals/README.md` for setup. Plugin-infrastructure tests live at `tests/` and run via the relevant `run-*.sh` or `npm test`.
+```bash
+/rapidcode:opencode-executor
+```
 
-See `skills/writing-skills/SKILL.md` for the complete guide.
-
-## Updating
-
-Superpowers updates are somewhat coding-agent dependent, but are often automatic.
+This routes all step dispatch through the opencode CLI using the model declared in each step file. Claude is the automatic fallback on failure.
 
 ## License
 
-MIT License - see LICENSE file for details
-
-## Visual companion telemetry
-
-Because skills and plugins don't provide any feedback to creators, we have no idea how many of you are using Superpowers. By default, the Prime Radiant logo on brainstorming's optional visual companion feature is loaded from our website. It includes the version of Superpowers in use. It does not include any details about your project, prompt, or coding agent. We don't see your clicks or anything about what you're building. This helps us have a rough idea of how many folks are using Superpowers and which version of Superpowers they're using. It's 100% optional. To disable this, set the environment variable `SUPERPOWERS_DISABLE_TELEMETRY` to any true value. Superpowers also honors Claude Code's `DISABLE_TELEMETRY` and `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` opt-outs.
-
-## Community
-
-Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
-
-- **Discord**: [Join us](https://discord.gg/35wsABTejz) for community support, questions, and sharing what you're building with Superpowers
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Release announcements**: [Sign up](https://primeradiant.com/superpowers/) to get notified about new versions
+MIT License — see LICENSE file for details.
