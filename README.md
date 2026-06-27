@@ -9,11 +9,11 @@ The moment you describe what you want to build, rapidcode kicks in. It asks only
 ## The Workflow
 
 ```
-/rapidcode:rapid-spec       # ≤3 questions → spec → manual-edit gate
+/rapidcode:rapid-spec       # ≤3 questions → spec (codebase-design vocabulary) → manual-edit gate
         ↓
-/rapidcode:plan-as-folder   # spec → DAG of step files under .rapid/plans/
+/rapidcode:plan-as-folder   # spec → DAG of step files under .rapid/plans/<date>-<topic>/
         ↓                     (manual-edit gate before execution)
-/rapidcode:rapid-execute    # parallel wave-scheduler → Phase 1 done → Phase 2 review loop
+/rapidcode:rapid-execute    # parallel wave-scheduler → Phase 1 done → Phase 2 review loop → rapid-docs
 ```
 
 ### Phase 1 — Time-critical (≤15 min)
@@ -27,7 +27,7 @@ When every `run-test` node is green → prototype is running, nothing committed.
 
 ### Phase 2 — Background (not time-critical)
 
-Whole-branch review (working-tree diff vs merge base) → fix → re-review until zero Critical/Important findings → notify. Runs autonomously while you play with the prototype.
+Whole-branch review (working-tree diff vs merge base) → fix → re-review until zero Critical/Important findings → update docs (`rapid-docs`) → notify. Runs autonomously while you play with the prototype.
 
 ## Skills
 
@@ -37,6 +37,7 @@ Whole-branch review (working-tree diff vs merge base) → fix → re-review unti
 | `rapid-spec` | Starting any new build |
 | `plan-as-folder` | After rapid-spec — auto-invoked |
 | `rapid-execute` | After plan-as-folder confirms — auto-invoked |
+| `rapid-docs` | End of rapid-execute Phase 2 — translates the spec into docs (README), no interview |
 
 ### Recovery & iteration
 | Skill | When to use |
@@ -80,7 +81,7 @@ All runtime artifacts are gitignored under `.rapid/`:
 ```
 .rapid/
   specs/<date>-<topic>.md       # rapid-spec output — edit before planning
-  plans/<feature>/
+  plans/<date>-<topic>/         # same basename as the spec it decomposes
     00-overview.md              # DAG table, goal, constraints
     task-NN-<kind>-<name>.md    # self-contained step files
   ledger.md                     # per-step completion record (resume anchor)

@@ -67,7 +67,8 @@ Escalate to `claude-sonnet-4-6` only for:
 
 ## 6. Write Step Files
 
-Create `.rapid/plans/<feature>/`. Name files `task-NN-<kind>-<name>.md` (zero-padded NN).
+Create `.rapid/plans/<spec-basename>/` where `<spec-basename>` is the spec filename minus `.md` (format: `YYYY-MM-DD-<topic>`).
+The plan folder basename must be identical to the spec filename (minus `.md`). Name files `task-NN-<kind>-<name>.md` (zero-padded NN).
 
 Use this template for every step file:
 
@@ -137,11 +138,11 @@ Wave N (sink):     task-NN-run-test-smoke
 
 After writing all files, ask:
 
-> "Plan written to `.rapid/plans/<feature>/` — NN step files + 00-overview.md.
+> "Plan written to `.rapid/plans/<spec-basename>/` — NN step files + 00-overview.md.
 > Review the step files now (especially contracts and models) and edit any file directly.
 > Ready to execute, or do you want more time to edit?"
 
-If user says ready: invoke `rapidcode:rapid-execute .rapid/plans/<feature>/`
+If user says ready: invoke `rapidcode:rapid-execute .rapid/plans/<spec-basename>/`
 If user says not yet: wait. Re-ask when they return.
 
 No commit.

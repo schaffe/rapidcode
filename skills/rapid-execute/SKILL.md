@@ -5,13 +5,13 @@ description: Use to execute a plan-as-folder DAG — runs the prototype to green
 
 # Rapid Execute
 
-Execute a `.rapid/plans/<feature>/` step-file DAG to a tested prototype, then review-clean it.
+Execute a `.rapid/plans/<spec-basename>/` step-file DAG to a tested prototype, then review-clean it.
 
 **Announce at start:** "I'm using rapid-execute to execute the plan."
 
 ## Arguments
 
-`/rapidcode:rapid-execute <plan-dir>` — path to the plan folder, e.g. `.rapid/plans/my-feature/`
+`/rapidcode:rapid-execute <plan-dir>` — path to the plan folder, e.g. `.rapid/plans/2026-06-27-my-feature/`
 
 Optional verbal flags (speak them before invoking):
 - "use free models" / "use opencode" → invoke `rapidcode:opencode-executor` first, then run this skill
@@ -21,7 +21,7 @@ Optional verbal flags (speak them before invoking):
 1. Reload spec and plan from disk
 2. Build DAG + check ledger
 3. Phase 1: wave-schedule all nodes to green
-4. Phase 2: review loop until reviewer-clean, then notify
+4. Phase 2: review loop until reviewer-clean, invoke rapid-docs, then notify
 
 ## 1. Reload from Disk
 
@@ -105,11 +105,17 @@ On loop exit, stage the work (do not commit):
 
 Staging makes the full change set easy to review and commit, without committing it for the user.
 
+Then invoke rapid-docs:
+> Invoke: `rapidcode:rapid-docs`
+
+Then re-stage any doc changes:
+> Run: `git add -A`
+
 Then notify:
-> "Phase 2 complete — zero Critical/Important findings. The prototype is review-clean. Changes are staged but not committed. Commit whenever you're satisfied."
+> "Phase 2 complete — zero Critical/Important findings. The prototype is review-clean, docs updated. Changes are staged but not committed. Commit whenever you're satisfied."
 
 ## Rules
-- **Never commit** in Phase 1 or Phase 2. Staging (`git add -A`) at the end of Phase 2 is fine; committing is the user's call.
+- **Never commit** in Phase 1 or Phase 2. Staging (`git add -A`) and invoking `rapidcode:rapid-docs` at the end of Phase 2 are fine; committing is the user's call.
 - **Never pause between nodes** to check in — execute until done or BLOCKED.
 - **Always read files from disk** — never paste step file contents into dispatch prompts.
 - **opencode toggle**: if the user invoked `rapidcode:opencode-executor` this session, all dispatch routes through opencode. Claude is the fallback on BLOCKED.
