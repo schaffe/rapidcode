@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Generate a Phase 2 review package: working-tree diff against the branch's
+# merge base, written to a file the reviewer reads in one call.
+#
+# Usage: review-package [OUTFILE]
+# Default OUTFILE: <repo-root>/.rapid/run/review-<timestamp>.diff
+set -euo pipefail
+
+repo_root=$(git rev-parse --show-toplevel)
+run_dir="${repo_root}/.rapid/run"
+mkdir -p "$run_dir"
+
+if [ $# -eq 1 ]; then
+  out=$1
+else
+  ts=$(date -u +%Y%m%dT%H%M%SZ)
+  out="${run_dir}/review-${ts}.diff"
+fi
+
+# Find merge base: try upstream tracking branch, fall back to HEAD
+upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)
+if [ -n "$upstream" ]; then
+  base=$(git merge-base HEAD "$upstream")
+else
+  base=$(git rev-parse HEAD)  # no commits yet — diff against current HEAD (shows staged changes)
+fi
+
+{
+  echo "# Phase 2 Review Package"
+  echo "# Generated: $(date -u)"
+  echo "# Base: ${base}"
+  echo
+  echo "## Files changed"
+  git diff --stat "$base" 2>/dev/null || git diff --cached --stat
+  echo
+  echo "## Diff"
+  git diff -U10 "$base" 2>/dev/null || git diff --cached -U10
+} > "$out"
+
+echo "wrote ${out}: $(wc -c < "$out" | tr -d ' ') bytes"

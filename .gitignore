@@ -2,7 +2,9 @@
 .private-journal/
 .claude/
 .superpowers/
+.rapid/
 .DS_Store
+.idea
 node_modules/
 inspo
 triage/
