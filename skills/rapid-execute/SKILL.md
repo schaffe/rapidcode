@@ -36,8 +36,9 @@ Read `skills/rapid-execute/execute-one-step.md` to confirm the engine contract b
 ## 2. Build DAG
 
 From every node's `Depends-on:` list:
-- Wave 1 = nodes with empty `Depends-on` (all `code` and `author-test` nodes)
-- Wave N+1 = nodes whose all deps appear in Waves 1..N
+- Wave 0 (pre-wave): any node whose Kind is `bootstrap` — dispatch these first, wait for DONE.
+- Wave 1 = nodes with empty `Depends-on` (all `code` and `author-test` nodes) — AFTER Wave 0 completes.
+- Wave N+1 = nodes whose all deps appear in Waves 0..N
 
 **Verify:** no dep cycles. If any node depends on itself (directly or transitively), stop and report.
 **Skip** any node already marked complete in the ledger.
@@ -46,7 +47,7 @@ From every node's `Depends-on:` list:
 
 Initialize `.rapid/run/` directory: `mkdir -p .rapid/run`
 
-For each wave (in order, skipping fully-complete waves):
+For each wave (0, 1, 2, ... in order, skipping fully-complete waves):
 1. **Dispatch ALL non-skipped nodes in the wave in parallel** via `execute-one-step` (read `execute-one-step.md`).
    - Pass each node: step file path, executor (from step file or opencode toggle), model (from step file).
 2. Wait for all dispatched nodes to return status.
@@ -67,8 +68,11 @@ Announce:
 
 Phase 2 runs autonomously. The user does not need to be present.
 
-**Reviewer model: `claude-opus-4-8` (most capable — Phase 2 is not time-critical).**
-**Fixer model: `claude-sonnet-4-6`.**
+Models are resolved through `skills/model-profiles/SKILL.md` — the step file's declared model is the fast-path default;
+the reviewer/fixer models use tier-based resolution for environment portability.
+
+**Reviewer model:** Deep Reasoning tier (see `skills/model-profiles/SKILL.md`).
+**Fixer model:** Balanced tier (see `skills/model-profiles/SKILL.md`).
 
 ```
 loop:
@@ -76,8 +80,9 @@ loop:
      Run: skills/rapid-execute/scripts/review-package
      This writes the diff to .rapid/run/review-<timestamp>.diff and prints the path.
 
-  2. Dispatch code-reviewer subagent (model: claude-opus-4-8):
-     Prompt: "You are doing a whole-branch code review. Your goal: correctness and integration test coverage.
+   2. Dispatch code-reviewer subagent (model: Deep Reasoning tier — see skills/model-profiles/SKILL.md):
+      Model preamble (prepend to prompt): "Model assigned: Deep Reasoning tier. Consult skills/model-profiles/SKILL.md for capability context."
+      Prompt: "You are doing a whole-branch code review. Your goal: correctness and integration test coverage.
 
      Diff file: <printed path from step 1>
 
@@ -92,8 +97,9 @@ loop:
   3. If reviewer returns zero Critical + zero Important findings:
      break
 
-  4. Dispatch fixer subagent (model: claude-sonnet-4-6) with ALL Critical + Important findings at once:
-     - Never dispatch one fixer per finding — one fixer gets the complete list.
+   4. Dispatch fixer subagent (model: Balanced tier — see skills/model-profiles/SKILL.md) with ALL Critical + Important findings at once:
+      - Model preamble: "Model assigned: Balanced tier. Consult skills/model-profiles/SKILL.md for capability context."
+      - Never dispatch one fixer per finding — one fixer gets the complete list.
      - Fixer re-runs the full test suite after fixing.
      - Fixer appends results to .rapid/run/phase2-fix-<N>-report.md.
 

@@ -46,17 +46,41 @@ Read by `rapid-execute`, `resume`, and `rerun-step` before dispatching.
       - For integration/smoke: also include the unit code file paths the integration composes
       - Prompt template: `fixer-prompt.md`
       - Report file: `.rapid/run/<node-name>-fix-<attempt>-report.md`
-      - Model: step file's declared model (escalate to `claude-sonnet-4-6` on attempt 2+)
+      - Model: step file's declared model (escalate to Balanced tier from `skills/model-profiles/SKILL.md` on attempt 2+)
    b. Re-run test command.
    c. If PASS: append to ledger, return DONE.
 5. After 3 failed attempts: return BLOCKED (do not mark ledger).
 
+### bootstrap node
+1. Read `step_file`. Extract: Bootstrap targets, Files.
+2. Dispatch **bootstrap subagent** via executor:
+   - Model: `model` from step file
+   - Executor: see Executor Routing above
+   - Prompt template: `bootstrap-prompt.md`
+   - Inputs: step file path, report file path
+3. Verify scaffolding succeeded:
+   a. Read the step file's **Files** section to get the expected file list. For each file: `[ -f "<path>" ] && echo "OK: <path>" || echo "MISSING: <path>"`.
+   b. If any file is MISSING: return BLOCKED with list of missing files.
+   c. If all present, run: `go vet ./...` to confirm minimal project validity.
+   d. If `go vet` fails with non-trivial errors (not "no Go files"): return BLOCKED with vet output.
+4. Append to `.rapid/ledger.md`:
+   `<node-name>: complete <ISO-8601-timestamp>`
+5. Return: status (DONE | BLOCKED | NEEDS_CONTEXT) + one-line summary.
+
 ## Executor Routing
-- `Executor: claude` → dispatch via Agent/Task tool.
-- `Executor: opencode` OR `rapidcode:opencode-executor` invoked this session →
-  shell out: `opencode run --model <model> --file <step_file> > <report_file>`
-  On non-zero exit or `BLOCKED` in output: retry once via Claude as fallback.
-  Log: `echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] opencode BLOCKED for <node>, retrying with Claude" >> .rapid/run/opencode-executor.log`
+
+Detect environment:
+- Check `$OPENCODE_NATIVE` env var (set to `1` by the `using-superpowers` bootstrap in native opencode TUI sessions).
+- Check for task-dispatch capability: if the agent has access to a `task` or `subagent` tool for dispatching subagents.
+- If `OPENCODE_NATIVE=1` OR Task tool is available → native opencode TUI mode.
+  - Always dispatch via Task tool subagent.
+  - Prepend prompt preamble: "Model assigned: <model>. Consult skills/model-profiles/SKILL.md for capability context."
+  - Fallback: if subagent returns BLOCKED, retry once. If still BLOCKED, escalate to user.
+- Otherwise (external harness like Claude Code):
+  - If `Executor: opencode` → shell out: `opencode run --model <model> --file <step_file> > <report_file>`
+    On non-zero exit or BLOCKED: retry once via native subagent as fallback.
+    Log: `echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] opencode BLOCKED for <node>, retrying with Claude" >> .rapid/run/opencode-executor.log`
+  - If `Executor: claude` → dispatch native subagent via Task tool (same as opencode TUI default).
 
 ## Ledger Format
 `.rapid/ledger.md` — one line per completed node, appended:

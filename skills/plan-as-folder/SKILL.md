@@ -45,9 +45,13 @@ From the spec's Contracts section:
 - `task-NN-author-test-smoke.md` — writes the smoke test from the Success Criterion; deps = []
 - `task-NN-run-test-smoke.md` — DAG sink; deps = [smoke author-test, all integration run-test nodes]
 
+**Per project (if Go detected — `go.mod` exists or spec declares Go):**
+- `task-00-bootstrap-go.md` — scaffolds Makefile, .golangci.yml, go.mod; Depends-on: []
+
 ## 4. Wire DAG Edges
 
 Rules:
+- `bootstrap` nodes: `Depends-on: []` (Wave-0 root — runs before Wave 1 if present)
 - `code` nodes: `Depends-on: []` (Wave-1 root)
 - `author-test` nodes: `Depends-on: []` (Wave-1 root — consumes only the contract)
 - unit `run-test`: `Depends-on: [code-node, author-test-node]`
@@ -58,10 +62,10 @@ Rules:
 
 ## 5. Assign Models
 
-Default every node to `claude-haiku-4-5-20251001`.
-Escalate to `claude-sonnet-4-6` only for:
-- A `code` node that touches >2 files with complex integration concerns
-- A `run-test` node whose fixer is likely to face multi-file reconciliation
+See `skills/model-profiles/SKILL.md` for capability guidance when choosing `Model:` values.
+Default every node to Fast/Cheap tier model.
+Escalate to Balanced for standard code and author-test nodes.
+Escalate to Deep Reasoning for complex code nodes (>2 files, cross-module, integration concerns).
 
 **Every node MUST declare a model — no omissions.**
 
@@ -75,11 +79,11 @@ Use this template for every step file:
 ```markdown
 # Task NN: <descriptive name>
 
-**Kind:** code | author-test | run-test
+**Kind:** code | author-test | run-test | bootstrap
 **Test-scope:** unit | integration | smoke   (omit for code nodes)
 **Depends-on:** [task-NN, task-NN]           ([] for Wave-1 roots)
 **Executor:** claude
-**Model:** claude-haiku-4-5-20251001
+**Model:** Fast/Cheap tier model (resolve per skills/model-profiles/SKILL.md for your environment)
 
 **Files:**
 - Create: `exact/path/file.ts`
@@ -109,6 +113,15 @@ Test command: `<exact shell command to run just these tests>`
 For `run-test` nodes, the Contract section must include:
 ```
 Test command: `<exact shell command>`
+```
+
+For `bootstrap` nodes, omit the Contract section and use **Bootstrap targets** instead:
+```
+## Bootstrap targets
+
+- Makefile: build, test, lint, fmt, clean, coverage, all
+- .golangci.yml: [linter configuration notes]
+- go.mod: module name and init instructions
 ```
 
 ### Write 00-overview.md
@@ -146,3 +159,32 @@ If user says ready: invoke `rapidcode:rapid-execute .rapid/plans/<spec-basename>
 If user says not yet: wait. Re-ask when they return.
 
 No commit.
+
+## Integration Tests
+
+Test plan-as-folder DAG generation behavior:
+
+### DAG Structure
+- Go project (with `go.mod` or spec declaring Go): MUST produce `task-00-bootstrap-go.md` in Wave 0
+- Non-Go project: MUST NOT produce a bootstrap node
+- Wave 1: all `code` and `author-test` nodes have `Depends-on: []`
+- Wave N (sink): smoke `run-test` depends on all upstream `run-test` nodes
+- No cycles: every node's transitive deps never includes itself
+
+### Step File Format
+- Every node declares **Kind**, **Model**, **Executor**, **Depends-on**
+- `code` nodes include Contract + Implementation notes + Files
+- `author-test` nodes include Contract + Test instructions + Test command, OMIT Implementation notes
+- `run-test` nodes include Test command in Contract, OMIT Implementation notes and Test instructions
+- `bootstrap` nodes include Bootstrap targets + Files, OMIT Contract
+
+### Model Assignment
+- Default: Fast/Cheap tier
+- Standard code and author-test: Balanced tier
+- Complex code (>2 files, cross-module): Deep Reasoning tier
+- Every node has a Model: value — no omissions
+
+### Wave-0 Wiring
+- If a bootstrap node exists, it is Wave 0 (runs before Wave 1)
+- All Wave-1 nodes have no dependency on the bootstrap node
+- Bootstrap node has `Depends-on: []`

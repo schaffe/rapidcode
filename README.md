@@ -20,6 +20,7 @@ The moment you describe what you want to build, rapidcode kicks in. It asks only
 
 Each step file declares a node kind, a model, and a contract. The wave-scheduler dispatches all independent nodes in parallel:
 
+- **Wave 0 (pre-wave):** `bootstrap` nodes (project scaffolding) run before any code — ensures tooling exists
 - **Wave 1 (all in parallel):** every `code` node (implements a unit) + every `author-test` node (writes tests from the contract, never reads the implementation)
 - **Subsequent waves:** `run-test` gates fire as their deps land — unit tests, then integration tests, then the smoke test (DAG sink)
 
@@ -44,6 +45,13 @@ Whole-branch review (working-tree diff vs merge base) → fix → re-review unti
 |---|---|
 | `resume` | After a rapid-execute was aborted or interrupted |
 | `rerun-step` | Re-run one specific step file in isolation |
+| `opencode-executor` | Toggle free-model execution via opencode CLI for the session |
+
+### Environment & model selection
+| Skill | When to use |
+|---|---|
+| `model-profiles` | Reference for model capability tiers and step-kind-to-model mapping |
+| `bootstrap-go` | Scaffold Go projects with Makefile, linter config, and go.mod |
 | `opencode-executor` | Toggle free-model execution via opencode CLI for the session |
 
 ### Engineering disciplines
@@ -97,11 +105,11 @@ Each step file declares its node kind, dependencies, model, and contract:
 ```markdown
 # Task NN: <name>
 
-**Kind:** code | author-test | run-test
+**Kind:** code | author-test | run-test | bootstrap
 **Test-scope:** unit | integration | smoke   (omit for code nodes)
 **Depends-on:** []                           ([] = Wave-1 root)
 **Executor:** claude
-**Model:** claude-haiku-4-5-20251001
+**Model:** Fast/Cheap tier model (see `skills/model-profiles/SKILL.md`)
 
 **Files:**
 - Create: `src/exact/path.ts`
@@ -114,7 +122,8 @@ Example: `functionName("x") → "y"`
 ## Test instructions      (author-test nodes only)
 ```
 
-- `code` and `author-test` nodes have empty `Depends-on` — they run in Wave 1 in parallel
+- `bootstrap`, `code`, and `author-test` nodes have empty `Depends-on` — bootstrap runs in Wave 0, code/author-test in Wave 1
+- `bootstrap` nodes scaffold project tooling (e.g., Makefile, .golangci.yml, go.mod for Go projects)
 - `run-test` nodes depend on their `code` + `author-test` nodes
 - Integration and smoke `run-test` nodes are the DAG's later waves and sink
 
@@ -123,7 +132,7 @@ Example: `functionName("x") → "y"`
 - **Rigor lives in the plan.** Contracts + independent test authorship replace per-task reviewer subagents.
 - **Tests are the gate.** Code and tests are written from the same contract by separate subagents. Tests verify the contract, not the implementation's bugs.
 - **No eager commits.** Phase 1 builds in the working tree. You decide when to commit.
-- **Cheap models, explicitly.** Every step file declares its model. Default: haiku. Escalate only where the plan says so.
+- **Model tiers, explicitly.** Every step file declares its model tier. The `model-profiles` skill maps tiers (Fast/Cheap, Balanced, Deep Reasoning) to concrete models per environment.
 - **Minimal reports.** Subagents write detail to `.rapid/run/` and return status only.
 
 ## Recovery
@@ -142,7 +151,14 @@ To re-run a single node:
 /rapidcode:rerun-step .rapid/plans/<feature>/task-NN-<name>.md
 ```
 
-## Free models via opencode
+## Executor routing
+
+When running inside opencode TUI, all step dispatch goes through native subagents (Task tool) regardless of the step's `Executor:` field. When running in other harnesses (Claude Code, Gemini CLI), the `Executor:` field controls dispatch:
+
+- `Executor: claude` → native subagent
+- `Executor: opencode` → shell out to `opencode run --model <model> --file <step>`
+
+### Free models via opencode
 
 Say "use free models" or "use opencode" before running `rapid-execute` — or invoke the skill directly:
 
@@ -150,7 +166,7 @@ Say "use free models" or "use opencode" before running `rapid-execute` — or in
 /rapidcode:opencode-executor
 ```
 
-This routes all step dispatch through the opencode CLI using the model declared in each step file. Claude is the automatic fallback on failure.
+This routes all step dispatch through the opencode CLI using the model declared in each step file. The native harness model is the automatic fallback on failure.
 
 ## License
 
