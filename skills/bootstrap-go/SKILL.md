@@ -22,10 +22,15 @@ All at the project root:
 ### `Makefile`
 
 ```makefile
+BINDIR ?= out
+
 .PHONY: build test lint fmt clean coverage all
 
 build:
-	go build ./...
+	@mkdir -p $(BINDIR)
+	for dir in $$(go list -f '{{if eq .Name "main"}}{{.Dir}}{{end}}' ./...); do \
+		go build -o $(BINDIR)/$$(basename $$dir) $$dir; \
+	done
 
 test:
 	go test -race -cover ./...
@@ -34,10 +39,11 @@ lint:
 	golangci-lint run ./...
 
 fmt:
-	gofmt -s -w .  # optional: replace with gofumpt -l -w . if gofumpt is installed
+	gofmt -s -w .
 
 clean:
 	rm -f coverage.out
+	rm -rf $(BINDIR)
 
 coverage:
 	go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out
@@ -48,35 +54,29 @@ all: fmt lint build test
 ### `.golangci.yml`
 
 ```yaml
+version: "2"
+
 linters:
-  enable-all: false
   enable:
     - govet
     - errcheck
     - staticcheck
     - revive
-    - gosimple
     - ineffassign
     - unused
     - misspell
-
-linters-settings:
-  govet:
-    enable-all: true
-  staticcheck:
-    checks: ["all"]
-  revive:
-    rules:
-      - name: exported
-        severity: warning
+  settings:
+    govet:
+      enable-all: true
+    staticcheck:
+      checks: ["all"]
+    revive:
+      rules:
+        - name: exported
+          severity: warning
 
 run:
   timeout: 5m
-  go: "1.22"  # update to match your Go version; check with: go version | grep -Eo 'go[0-9]+\.[0-9]+' | tr -d 'go'
-
-output:
-  formats:
-    - format: colored-line-number
 ```
 
 ### `go.mod`
